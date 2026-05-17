@@ -23,13 +23,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
-
-
 @RestController
 @RequestMapping("/api/raw-materials")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {
+    "http://localhost:3012",
+    "http://127.0.0.1:3012"
+})
 public class RawMaterialController {
     private final RawMaterialService rawMaterialService;
 

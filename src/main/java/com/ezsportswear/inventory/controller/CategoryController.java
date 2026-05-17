@@ -11,13 +11,15 @@ import com.ezsportswear.inventory.service.CategoryService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {
+    "http://localhost:3012",
+    "http://127.0.0.1:3012"
+})
 public class CategoryController {
     private final CategoryService categoryService;
 

@@ -15,7 +15,7 @@ public class RawMaterialRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank(message = "Stock is required")
+    @NotNull(message = "Stock is required")
     @Min(value = 0, message = "Stock cannot be negative")
     private Integer stock;
 
