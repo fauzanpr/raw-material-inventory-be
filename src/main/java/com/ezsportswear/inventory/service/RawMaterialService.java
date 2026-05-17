@@ -32,10 +32,26 @@ public class RawMaterialService {
     }
 
     // helper function
+    // private User getAuthenticatedUser() {
+    // Object principal = SecurityContextHolder.getContext()
+    // .getAuthentication()
+    // .getPrincipal();
+
+    // if (principal instanceof User user) {
+    // return user;
+    // }
+
+    // throw new IllegalArgumentException("User is not authenticated");
+    // }
+
     private User getAuthenticatedUser() {
-        Object principal = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getPrincipal() == null) {
+            throw new IllegalArgumentException("User is not authenticated");
+        }
+
+        Object principal = authentication.getPrincipal();
 
         if (principal instanceof User user) {
             return user;
