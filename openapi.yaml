@@ -1,0 +1,423 @@
+openapi: 3.0.3
+info:
+  title: Inventory Management Raw Material API
+  description: API untuk mengelola data bahan baku, kategori, stok masuk, stok keluar, dan stock opname pada sistem Inventory Management Raw Material EZ Sportswear.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Category
+    description: API untuk mengambil data kategori bahan baku
+  - name: Raw Material
+    description: API untuk mengelola data bahan baku dan stok
+
+paths:
+  /api/categories:
+    get:
+      tags:
+        - Category
+      summary: Menampilkan semua kategori bahan baku
+      description: Mengambil seluruh data kategori bahan baku yang tersedia pada sistem.
+      operationId: getAllCategories
+      responses:
+        "200":
+          description: Berhasil mengambil data kategori
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  /api/raw-materials:
+    get:
+      tags:
+        - Raw Material
+      summary: Menampilkan daftar raw material
+      description: Mengambil daftar bahan baku dengan dukungan search dan pagination.
+      operationId: getRawMaterials
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Keyword pencarian berdasarkan nama raw material
+          schema:
+            type: string
+            example: Kain
+        - name: page
+          in: query
+          required: false
+          description: Nomor halaman, dimulai dari 0
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: size
+          in: query
+          required: false
+          description: Jumlah data per halaman
+          schema:
+            type: integer
+            default: 10
+            example: 10
+      responses:
+        "200":
+          description: Berhasil mengambil daftar raw material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterialPage"
+
+    post:
+      tags:
+        - Raw Material
+      summary: Menambahkan data raw material
+      description: Menambahkan data bahan baku baru ke dalam sistem.
+      operationId: createRawMaterial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawMaterialRequest"
+            example:
+              code: RM001
+              name: Kain Dryfit
+              stock: 100
+              unit: meter
+              description: Bahan jersey basket
+              categoryId: 1
+              createdBy: 1
+      responses:
+        "200":
+          description: Raw material berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterial"
+        "400":
+          description: Input tidak valid
+
+  /api/raw-materials/{id}:
+    put:
+      tags:
+        - Raw Material
+      summary: Mengubah data raw material
+      description: Mengubah data bahan baku berdasarkan ID.
+      operationId: updateRawMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID raw material yang akan diubah
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RawMaterialRequest"
+            example:
+              code: RM001
+              name: Kain Dryfit Premium
+              stock: 120
+              unit: meter
+              description: Bahan jersey basket premium
+              categoryId: 1
+              createdBy: 1
+      responses:
+        "200":
+          description: Raw material berhasil diubah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterial"
+        "400":
+          description: Input tidak valid
+        "404":
+          description: Raw material tidak ditemukan
+
+    delete:
+      tags:
+        - Raw Material
+      summary: Menghapus data raw material
+      description: Menghapus data bahan baku berdasarkan ID.
+      operationId: deleteRawMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID raw material yang akan dihapus
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        "200":
+          description: Raw material berhasil dihapus
+        "404":
+          description: Raw material tidak ditemukan
+
+  /api/raw-materials/{id}/stock-in:
+    patch:
+      tags:
+        - Raw Material
+      summary: Menambahkan stok raw material
+      description: Menambahkan jumlah stok bahan baku melalui proses stock in.
+      operationId: stockInRawMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID raw material yang stoknya akan ditambahkan
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockRequest"
+            example:
+              quantity: 20
+      responses:
+        "200":
+          description: Stok berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterial"
+        "400":
+          description: Input tidak valid
+        "404":
+          description: Raw material tidak ditemukan
+
+  /api/raw-materials/{id}/stock-out:
+    patch:
+      tags:
+        - Raw Material
+      summary: Mengurangi stok raw material
+      description: Mengurangi jumlah stok bahan baku melalui proses stock out.
+      operationId: stockOutRawMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID raw material yang stoknya akan dikurangi
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockRequest"
+            example:
+              quantity: 10
+      responses:
+        "200":
+          description: Stok berhasil dikurangi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterial"
+        "400":
+          description: Input tidak valid atau stok tidak mencukupi
+        "404":
+          description: Raw material tidak ditemukan
+
+  /api/raw-materials/{id}/stock-opname:
+    patch:
+      tags:
+        - Raw Material
+      summary: Menyesuaikan stok raw material
+      description: Menyesuaikan jumlah stok bahan baku berdasarkan hasil stock opname.
+      operationId: stockOpnameRawMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID raw material yang stoknya akan disesuaikan
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockOpnameRequest"
+            example:
+              actualStock: 95
+      responses:
+        "200":
+          description: Stok berhasil disesuaikan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawMaterial"
+        "400":
+          description: Input tidak valid
+        "404":
+          description: Raw material tidak ditemukan
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Admin Gudang
+        email:
+          type: string
+          example: admin@ezsportswear.com
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Fabric
+
+    RawMaterial:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        code:
+          type: string
+          example: RM001
+        name:
+          type: string
+          example: Kain Dryfit
+        stock:
+          type: integer
+          example: 100
+        unit:
+          type: string
+          example: meter
+        description:
+          type: string
+          example: Bahan jersey basket
+        category:
+          $ref: "#/components/schemas/Category"
+        createdBy:
+          $ref: "#/components/schemas/User"
+
+    RawMaterialRequest:
+      type: object
+      required:
+        - code
+        - name
+        - stock
+        - unit
+        - categoryId
+      properties:
+        code:
+          type: string
+          example: RM001
+        name:
+          type: string
+          example: Kain Dryfit
+        stock:
+          type: integer
+          minimum: 0
+          example: 100
+        unit:
+          type: string
+          example: meter
+        description:
+          type: string
+          example: Bahan jersey basket
+        categoryId:
+          type: integer
+          format: int64
+          example: 1
+        createdBy:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1
+
+    StockRequest:
+      type: object
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          example: 20
+
+    StockOpnameRequest:
+      type: object
+      required:
+        - actualStock
+      properties:
+        actualStock:
+          type: integer
+          minimum: 0
+          example: 95
+
+    RawMaterialPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/RawMaterial"
+        pageable:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+              example: 0
+            pageSize:
+              type: integer
+              example: 10
+        totalElements:
+          type: integer
+          example: 25
+        totalPages:
+          type: integer
+          example: 3
+        last:
+          type: boolean
+          example: false
+        first:
+          type: boolean
+          example: true
+        size:
+          type: integer
+          example: 10
+        number:
+          type: integer
+          example: 0
+        numberOfElements:
+          type: integer
+          example: 10
+        empty:
+          type: boolean
+          example: false
