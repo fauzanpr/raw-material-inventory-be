@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Inventory Management Raw Material API
-  description: API untuk mengelola data bahan baku, kategori, stok masuk, stok keluar, dan stock opname pada sistem Inventory Management Raw Material EZ Sportswear.
+  description: API untuk login, mengelola kategori, data bahan baku, stok masuk, stok keluar, dan stock opname pada sistem Inventory Management Raw Material EZ Sportswear.
   version: 1.0.0
 
 servers:
@@ -9,12 +9,57 @@ servers:
     description: Local development server
 
 tags:
+  - name: Auth
+    description: API untuk autentikasi pengguna
   - name: Category
     description: API untuk mengambil data kategori bahan baku
   - name: Raw Material
     description: API untuk mengelola data bahan baku dan stok
 
 paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login pengguna
+      description: Melakukan autentikasi pengguna dan mengembalikan access token JWT.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: admin@ezsportswear.com
+              password: password
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                access_token: eyJhbGciOiJIUzI1NiJ9...
+        "400":
+          description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Email is required
+        "401":
+          description: Email atau password salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Email or password is incorrect
+
   /api/categories:
     get:
       tags:
@@ -22,6 +67,8 @@ paths:
       summary: Menampilkan semua kategori bahan baku
       description: Mengambil seluruh data kategori bahan baku yang tersedia pada sistem.
       operationId: getAllCategories
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Berhasil mengambil data kategori
@@ -31,6 +78,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Category"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/raw-materials:
     get:
@@ -39,6 +92,8 @@ paths:
       summary: Menampilkan daftar raw material
       description: Mengambil daftar bahan baku dengan dukungan search dan pagination.
       operationId: getRawMaterials
+      security:
+        - bearerAuth: []
       parameters:
         - name: search
           in: query
@@ -70,6 +125,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RawMaterialPage"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -77,6 +138,8 @@ paths:
       summary: Menambahkan data raw material
       description: Menambahkan data bahan baku baru ke dalam sistem.
       operationId: createRawMaterial
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -100,6 +163,16 @@ paths:
                 $ref: "#/components/schemas/RawMaterial"
         "400":
           description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/raw-materials/{id}:
     put:
@@ -108,6 +181,8 @@ paths:
       summary: Mengubah data raw material
       description: Mengubah data bahan baku berdasarkan ID.
       operationId: updateRawMaterial
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -123,14 +198,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/RawMaterialRequest"
-            example:
-              code: RM001
-              name: Kain Dryfit Premium
-              stock: 120
-              unit: meter
-              description: Bahan jersey basket premium
-              categoryId: 1
-              createdBy: 1
       responses:
         "200":
           description: Raw material berhasil diubah
@@ -140,8 +207,22 @@ paths:
                 $ref: "#/components/schemas/RawMaterial"
         "400":
           description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Raw material tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
@@ -149,6 +230,8 @@ paths:
       summary: Menghapus data raw material
       description: Menghapus data bahan baku berdasarkan ID.
       operationId: deleteRawMaterial
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -161,8 +244,18 @@ paths:
       responses:
         "200":
           description: Raw material berhasil dihapus
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Raw material tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/raw-materials/{id}/stock-in:
     patch:
@@ -171,6 +264,8 @@ paths:
       summary: Menambahkan stok raw material
       description: Menambahkan jumlah stok bahan baku melalui proses stock in.
       operationId: stockInRawMaterial
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -197,8 +292,22 @@ paths:
                 $ref: "#/components/schemas/RawMaterial"
         "400":
           description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Raw material tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/raw-materials/{id}/stock-out:
     patch:
@@ -207,6 +316,8 @@ paths:
       summary: Mengurangi stok raw material
       description: Mengurangi jumlah stok bahan baku melalui proses stock out.
       operationId: stockOutRawMaterial
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -233,8 +344,22 @@ paths:
                 $ref: "#/components/schemas/RawMaterial"
         "400":
           description: Input tidak valid atau stok tidak mencukupi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Raw material tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/raw-materials/{id}/stock-opname:
     patch:
@@ -243,6 +368,8 @@ paths:
       summary: Menyesuaikan stok raw material
       description: Menyesuaikan jumlah stok bahan baku berdasarkan hasil stock opname.
       operationId: stockOpnameRawMaterial
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -269,11 +396,60 @@ paths:
                 $ref: "#/components/schemas/RawMaterial"
         "400":
           description: Input tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Raw material tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@ezsportswear.com
+        password:
+          type: string
+          format: password
+          example: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9...
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Unauthorized
+
     User:
       type: object
       properties:
@@ -388,36 +564,24 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RawMaterial"
-        pageable:
-          type: object
-          properties:
-            pageNumber:
-              type: integer
-              example: 0
-            pageSize:
-              type: integer
-              example: 10
         totalElements:
           type: integer
           example: 25
         totalPages:
           type: integer
           example: 3
-        last:
-          type: boolean
-          example: false
-        first:
-          type: boolean
-          example: true
         size:
           type: integer
           example: 10
         number:
           type: integer
           example: 0
-        numberOfElements:
-          type: integer
-          example: 10
+        first:
+          type: boolean
+          example: true
+        last:
+          type: boolean
+          example: false
         empty:
           type: boolean
           example: false
