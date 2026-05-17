@@ -26,6 +26,4 @@ public class RawMaterialRequest {
 
     @NotNull(message = "Category is required")
     private Long categoryId;
-
-    private Long cratedBy;
 }

@@ -2,6 +2,7 @@ package com.ezsportswear.inventory.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.ezsportswear.inventory.dto.RawMaterialRequest;
@@ -30,15 +31,24 @@ public class RawMaterialService {
         return rawMaterialRepository.findAll(pageable);
     }
 
+    // helper function
+    private User getAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        if (principal instanceof User user) {
+            return user;
+        }
+
+        throw new IllegalArgumentException("User is not authenticated");
+    }
+
     public RawMaterial create(RawMaterialRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        User user = null;
-        if (request.getCratedBy() != null) {
-            user = userRepository.findById(request.getCratedBy())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        }
+        User authenticatedUser = getAuthenticatedUser();
 
         RawMaterial rawMaterial = RawMaterial.builder()
                 .code(request.getCode())
@@ -47,16 +57,18 @@ public class RawMaterialService {
                 .unit(request.getUnit())
                 .description(request.getDescription())
                 .category(category)
-                .created_by(user)
+                .created_by(authenticatedUser)
                 .build();
 
         return rawMaterialRepository.save(rawMaterial);
     }
 
     public RawMaterial update(Long id, RawMaterialRequest request) {
-        RawMaterial rawMaterial = rawMaterialRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Raw Material Not Found"));
+        RawMaterial rawMaterial = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Raw Material Not Found"));
 
-        Category category = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
 
         rawMaterial.setCode(request.getCode());
         rawMaterial.setName(request.getName());
@@ -69,13 +81,15 @@ public class RawMaterialService {
     }
 
     public void delete(Long id) {
-        RawMaterial rawMaterial = rawMaterialRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Raw Material Not Found"));
+        RawMaterial rawMaterial = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Raw Material Not Found"));
 
         rawMaterialRepository.delete(rawMaterial);
     }
 
     public RawMaterial stockIn(Long id, Integer quantity) {
-        RawMaterial rawMaterial = rawMaterialRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
+        RawMaterial rawMaterial = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
 
         rawMaterial.setStock(rawMaterial.getStock() + quantity);
 
@@ -83,7 +97,8 @@ public class RawMaterialService {
     }
 
     public RawMaterial stockOut(Long id, Integer quantity) {
-        RawMaterial rawMaterial = rawMaterialRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
+        RawMaterial rawMaterial = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
 
         if (quantity > rawMaterial.getStock()) {
             throw new IllegalArgumentException("Stock is not enough");
@@ -95,7 +110,8 @@ public class RawMaterialService {
     }
 
     public RawMaterial stockOpname(Long id, Integer actualStock) {
-        RawMaterial rawMaterial = rawMaterialRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
+        RawMaterial rawMaterial = rawMaterialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
 
         rawMaterial.setStock(actualStock);
 
